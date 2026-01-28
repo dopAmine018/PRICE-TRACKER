@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     
-    <!-- Data scripts treated as static assets via absolute paths -->
+    <!-- Data scripts from public folder -->
     <script src="/rows.part0.init.js"></script>
     <script src="/rows.add.items01.js"></script>
     <script src="/rows.add.items02.js"></script>
@@ -48,18 +48,20 @@
       }
     </style>
     <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@^19.2.4",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-        "react/": "https://esm.sh/react@^19.2.4/"
-      }
-    }
-    </script>
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
   </head>
   <body class="bg-[#0f1115] text-[#f2f5f9]">
     <div id="root"></div>
-    <!-- Entry point for the React application -->
-    <script type="module" src="/index.tsx"></script>
+    <!-- Entry point for the React application using relative path -->
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
