@@ -1,0 +1,5 @@
+{
+  "name": "Last War: Survival Store Price Comparison",
+  "description": "A high-performance React application for comparing in-game item prices across various markets in Last War: Survival, featuring real-time currency conversion, category filtering, and multi-language support.",
+  "requestFramePermissions": []
+}

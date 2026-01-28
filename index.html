@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Store Price Comparison – Last War: Survival</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Data scripts treated as static assets via absolute paths -->
+    <script src="/rows.part0.init.js"></script>
+    <script src="/rows.add.items01.js"></script>
+    <script src="/rows.add.items02.js"></script>
+
+    <style>
+      body {
+        font-family: 'Cairo', sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #374151;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #4b5563;
+      }
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+      .preserve-3d {
+        transform-style: preserve-3d;
+      }
+      .backface-hidden {
+        backface-visibility: hidden;
+      }
+      .rotate-y-180 {
+        transform: rotateY(180deg);
+      }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.4",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+        "react/": "https://esm.sh/react@^19.2.4/"
+      }
+    }
+    </script>
+  </head>
+  <body class="bg-[#0f1115] text-[#f2f5f9]">
+    <div id="root"></div>
+  </body>
+</html>
