@@ -51,4 +51,6 @@ export interface TranslationStrings {
     close: string;
   };
   categories: Record<Category, string>;
+  markets: Record<string, string>;
+  items: Record<string, string>;
 }

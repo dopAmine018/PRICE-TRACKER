@@ -35,6 +35,7 @@ const ComparisonItem: React.FC<{
   };
 
   const sortedPrices = [...item.prices].sort((a, b) => a.price - b.price);
+  const localizedName = t.items[item.name] || item.name;
 
   return (
     <div className={`p-6 rounded-2xl border min-w-[300px] flex flex-col ${
@@ -49,7 +50,7 @@ const ComparisonItem: React.FC<{
             className="max-w-full max-h-full object-contain" 
           />
         </div>
-        <h3 className="font-black text-xl leading-tight line-clamp-2">{item.name}</h3>
+        <h3 className="font-black text-xl leading-tight line-clamp-2">{localizedName}</h3>
       </div>
 
       <div className="space-y-3">
@@ -60,7 +61,9 @@ const ComparisonItem: React.FC<{
             : theme === 'dark' ? 'bg-black/20 border-white/5' : 'bg-white border-gray-200'
           }`}>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-black uppercase opacity-60 line-clamp-1">{p.market}</span>
+              <span className="text-[10px] font-black uppercase opacity-60 line-clamp-1">
+                {t.markets[p.market] || p.market}
+              </span>
               {idx === 0 && <span className="text-[10px] font-black uppercase text-cyan-400">{t.ui.cheapest}</span>}
             </div>
             <span className={`text-lg font-black ${idx === 0 ? 'text-cyan-400' : ''}`}>

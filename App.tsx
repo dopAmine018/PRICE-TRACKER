@@ -12,7 +12,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('lang');
     return (saved === 'en' || saved === 'ar') ? saved : 'en';
   });
-
+  
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('theme');
     return (saved === 'dark' || saved === 'light') ? saved : 'dark';
@@ -29,7 +29,7 @@ const App: React.FC = () => {
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   const [items, setItems] = useState<ItemData[]>(() => {
     const win = window as any;
     if (win.ALL_ROWS && win.ALL_ROWS.length > 0) {
@@ -37,40 +37,32 @@ const App: React.FC = () => {
     }
     return INITIAL_ITEMS;
   });
-
+  
   const lastRowsCount = useRef<number>((window as any).ALL_ROWS?.length || 0);
 
-  // Sync Currency Rates
   useEffect(() => {
     const updateRates = async () => {
       const rates = await fetchLiveRates();
-
-      if (rates && Object.keys(rates).length > 0) {
-        const nextCurrencies: Record<string, Currency> = { ...CURRENCIES };
-
-        Object.keys(nextCurrencies).forEach((code) => {
-          const r = rates[code];
-          if (typeof r === 'number') {
-            nextCurrencies[code] = { ...nextCurrencies[code], rate: r };
+      if (Object.keys(rates).length > 0) {
+        const nextCurrencies = { ...CURRENCIES };
+        Object.keys(nextCurrencies).forEach(code => {
+          if (rates[code]) {
+            nextCurrencies[code] = { ...nextCurrencies[code], rate: rates[code] };
           }
         });
-
         setActiveCurrencies(nextCurrencies);
         setIsRateSynced(true);
       }
     };
-
     updateRates();
-    const rateInterval = setInterval(updateRates, 1000 * 60 * 60); // hourly
+    const rateInterval = setInterval(updateRates, 1000 * 60 * 60);
     return () => clearInterval(rateInterval);
   }, []);
 
-  // Sync Item Data
   useEffect(() => {
     const syncData = () => {
       const win = window as any;
       const rawData = win.ALL_ROWS;
-
       if (Array.isArray(rawData) && rawData.length > 0) {
         setIsLoading(false);
         if (rawData.length !== lastRowsCount.current) {
@@ -79,12 +71,10 @@ const App: React.FC = () => {
         }
       }
     };
-
     syncData();
     window.addEventListener('rows_updated', syncData);
     const interval = setInterval(syncData, 500);
     const timeout = setTimeout(() => setIsLoading(false), 5000);
-
     return () => {
       window.removeEventListener('rows_updated', syncData);
       clearInterval(interval);
@@ -95,6 +85,7 @@ const App: React.FC = () => {
   const t = I18N[lang];
   const isRtl = lang === 'ar';
   const currency = activeCurrencies[currencyCode] || activeCurrencies.USD;
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
@@ -103,17 +94,12 @@ const App: React.FC = () => {
   }, [lang, isRtl]);
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.body.className = 'bg-gray-50 text-gray-900';
-    } else {
-      document.body.className = 'bg-[#0f1115] text-[#f2f5f9]';
-    }
     localStorage.setItem('theme', theme);
   }, [theme]);
 
   const filteredItems = useMemo(() => {
     const query = search.toLowerCase().trim();
-    return items.filter((item) => {
+    return items.filter(item => {
       const name = String(item.name || '').toLowerCase();
       const matchesSearch = query === '' || name.includes(query);
       const matchesCategory = activeCategory === Category.ALL || item.category === activeCategory;
@@ -121,24 +107,8 @@ const App: React.FC = () => {
     });
   }, [items, search, activeCategory]);
 
-  const handleToggleSelect = (id: string) => {
-    setSelectedItemIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        if (next.size >= 3) {
-          alert(t.ui.maxItems);
-          return prev;
-        }
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
   return (
-    <div className={`min-h-screen pb-32 transition-colors duration-300 ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`min-h-screen pb-40 transition-colors duration-1000 ${isDark ? 'bg-[#05070a] text-[#e2e8f0]' : 'bg-gray-50 text-slate-900'}`}>
       <Header
         title={t.ui.title}
         lang={lang}
@@ -153,63 +123,68 @@ const App: React.FC = () => {
         currencies={Object.values(activeCurrencies)}
         isRtl={isRtl}
         t={t}
-        // LiveAssistant removed:
-        onOpenLive={undefined as any}
         isRateSynced={isRateSynced}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="flex flex-col items-center gap-6">
-          <div className="w-full max-w-2xl">
-            <input
-              type="text"
-              placeholder={t.ui.search}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={`w-full px-6 py-4 rounded-full border-2 focus:ring-4 focus:ring-cyan-400/30 outline-none font-bold text-lg transition-all ${
-                theme === 'dark'
-                  ? 'bg-[#1a1f2e] border-[#374151] text-[#f2f5f9] placeholder-gray-500 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
-                  : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 shadow-lg'
-              }`}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+        <div className="flex flex-col items-center gap-12">
+          <div className="w-full max-w-3xl text-center space-y-6">
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder={t.ui.search}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={`w-full px-10 py-6 rounded-[2rem] border-2 outline-none font-bold text-xl transition-all shadow-2xl ${
+                  isDark 
+                    ? 'bg-white/5 border-white/10 text-white placeholder-white/20 focus:border-cyan-400 focus:bg-white/10 focus:shadow-cyan-400/20' 
+                    : 'bg-white border-black/10 text-black placeholder-black/30 focus:border-blue-600 focus:shadow-blue-600/10'
+                }`}
+              />
+              <div className={`absolute right-6 top-1/2 -translate-y-1/2 text-2xl opacity-40 group-focus-within:opacity-100 group-focus-within:text-cyan-400 transition-all`}>🔍</div>
+            </div>
+
+            <FilterTabs
+              activeCategory={activeCategory}
+              setActiveCategory={setActiveCategory}
+              categories={t.categories}
+              theme={theme}
             />
           </div>
 
-          <FilterTabs
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
-            categories={t.categories}
-            theme={theme}
-          />
-        </div>
-
-        {isLoading && items.length === 0 ? (
-          <div className="mt-20 flex flex-col items-center gap-4 opacity-50 animate-pulse-slow">
-            <div className="text-6xl">📥</div>
-            <div className="text-xl font-bold uppercase tracking-widest">
-              Synchronizing Store Database...
+          {isLoading && items.length === 0 ? (
+            <div className="mt-32 flex flex-col items-center gap-6 animate-pulse-slow">
+              <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+              <div className="text-sm font-black uppercase tracking-[0.3em] opacity-40">Decrypting Server Data...</div>
             </div>
-          </div>
-        ) : filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
-            {filteredItems.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                currency={currency}
-                theme={theme}
-                isRtl={isRtl}
-                t={t}
-                isSelected={selectedItemIds.has(item.id)}
-                onToggleSelect={() => handleToggleSelect(item.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-20 text-center flex flex-col items-center justify-center gap-4 opacity-50">
-            <div className="text-6xl">🔍</div>
-            <div className="text-xl font-bold uppercase tracking-widest">{t.ui.noResults}</div>
-          </div>
-        )}
+          ) : filteredItems.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 w-full">
+              {filteredItems.map(item => (
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  currency={currency}
+                  theme={theme}
+                  isRtl={isRtl}
+                  t={t}
+                  isSelected={selectedItemIds.has(item.id)}
+                  onToggleSelect={() => setSelectedItemIds(prev => {
+                    const next = new Set(prev);
+                    if (next.has(item.id)) next.delete(item.id);
+                    else if (next.size < 3) next.add(item.id);
+                    else alert(t.ui.maxItems);
+                    return next;
+                  })}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-32 text-center flex flex-col items-center gap-6 opacity-30">
+              <div className="text-8xl">⚔️</div>
+              <div className="text-xl font-black uppercase tracking-widest">{t.ui.noResults}</div>
+            </div>
+          )}
+        </div>
       </main>
 
       <SelectionBar
@@ -223,22 +198,18 @@ const App: React.FC = () => {
       <ComparisonModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        items={items.filter((i) => selectedItemIds.has(i.id))}
+        items={items.filter(i => selectedItemIds.has(i.id))}
         currency={currency}
         theme={theme}
         t={t}
         isRtl={isRtl}
       />
 
-      <footer
-        className={`mt-20 py-12 border-t text-center ${
-          theme === 'dark' ? 'bg-[#161a22] border-[#273044]' : 'bg-gray-100 border-gray-200'
-        }`}
-      >
-        <div className="opacity-40 text-xs font-black uppercase tracking-tighter">
-        </div>
-        <div className="opacity-60 text-sm mt-2">
-          Made by <strong>ASN1/1628</strong>
+      <footer className={`mt-32 py-16 border-t text-center transition-colors ${
+        isDark ? 'bg-black/40 border-white/5' : 'bg-white border-black/5'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-6">
+          <div className="opacity-60 text-sm font-bold tracking-tight">Made by ASN1 1628</div>
         </div>
       </footer>
     </div>

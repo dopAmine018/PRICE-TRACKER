@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ItemData, Currency, TranslationStrings } from '../types';
 import { getItemImageSrc, DEFAULT_IMAGE } from '../constants';
@@ -39,6 +40,8 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
     setErrorCount(prev => prev + 1);
   };
 
+  const localizedName = t.items[item.name] || item.name;
+
   return (
     <div 
       className="relative h-[460px] w-full group cursor-pointer perspective-2000" 
@@ -53,7 +56,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
             ? 'bg-[#0e121a] border-white/5 hover:border-cyan-500/30' 
             : 'bg-white border-black/5'
         }`}>
-          {/* Subtle Background Glow */}
           {isDark && (
             <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/10 blur-[100px] pointer-events-none" />
           )}
@@ -62,7 +64,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
             <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-lg border ${
               isDark ? 'bg-white/5 border-white/10 text-white/50' : 'bg-black/5 border-black/10 text-black/50'
             }`}>
-              {item.category}
+              {t.categories[item.category] || item.category}
             </span>
             <div onClick={(e) => e.stopPropagation()} className="z-10">
               <input 
@@ -88,7 +90,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
             
             <div className="text-center">
               <h3 className="font-black text-2xl tracking-tight leading-tight mb-2 uppercase line-clamp-2 min-h-[3rem] flex items-center justify-center">
-                {item.name}
+                {localizedName}
               </h3>
               <div className={`inline-flex items-center gap-2 px-6 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
                 isDark ? 'bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-400 group-hover:text-black' : 'bg-blue-600/10 text-blue-700 group-hover:bg-blue-600 group-hover:text-white'
@@ -107,7 +109,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
             : 'bg-blue-50 border-blue-600/20'
         }`}>
           <div className="flex justify-between items-start mb-8">
-            <h3 className="font-black text-xl leading-tight uppercase tracking-tight line-clamp-2 flex-1 mr-4">{item.name}</h3>
+            <h3 className="font-black text-xl leading-tight uppercase tracking-tight line-clamp-2 flex-1 mr-4">{localizedName}</h3>
             <div onClick={(e) => e.stopPropagation()}>
               <input 
                 type="checkbox" 
@@ -136,7 +138,9 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
                   <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-400/10 blur-2xl" />
                 )}
                 <div className="flex items-center justify-between mb-1 relative z-10">
-                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">{p.market}</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">
+                    {t.markets[p.market] || p.market}
+                  </span>
                   {idx === 0 && (
                     <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md ${
                       isDark ? 'bg-cyan-400 text-black' : 'bg-blue-600 text-white'
