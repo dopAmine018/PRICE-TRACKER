@@ -3,55 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Store Price Comparison – Last War: Survival</title>
+    <title>War Intelligence – Price Comparison</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     
-    <!-- Global Data Initializer - Must be first -->
     <script>
       window.ALL_ROWS = window.ALL_ROWS || [];
       window.addRows = function(rows) {
         if (!rows || !Array.isArray(rows)) return;
-        console.log('addRows called with ' + rows.length + ' items');
         for (var i = 0; i < rows.length; i++) {
           var r = rows[i];
           if (Array.isArray(r) && r.length >= 3) {
             window.ALL_ROWS.push(r);
           }
         }
-        // Notify any listeners (like the React app) that data has changed
         window.dispatchEvent(new CustomEvent('rows_updated'));
       };
     </script>
     
-    <!-- Data scripts - Loading from root folder -->
     <script src="rows.part0.init.js"></script>
     <script src="rows.add.items01.js"></script>
     <script src="rows.add.items02.js"></script>
 
     <style>
+      :root {
+        --accent: #22d3ee;
+        --bg-deep: #05070a;
+      }
       body {
         font-family: 'Cairo', sans-serif;
         margin: 0;
         padding: 0;
-        background-color: #0f1115;
+        background-color: var(--bg-deep);
+        color: #e2e8f0;
+      }
+      .glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .glass-dark {
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .cyber-border {
+        box-shadow: 0 0 15px rgba(34, 211, 238, 0.1), inset 0 0 10px rgba(34, 211, 238, 0.05);
       }
       .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 4px;
+        height: 4px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
+        background: rgba(255,255,255,0.02);
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #374151;
+        background: var(--accent);
         border-radius: 10px;
       }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #4b5563;
-      }
-      .perspective-1000 {
-        perspective: 1000px;
+      .perspective-2000 {
+        perspective: 2000px;
       }
       .preserve-3d {
         transform-style: preserve-3d;
@@ -62,12 +74,23 @@
       .rotate-y-180 {
         transform: rotateY(180deg);
       }
-      @keyframes pulse-slow {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 0.7; }
+      @keyframes gradient-bg {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
-      .animate-pulse-slow {
-        animation: pulse-slow 2s infinite ease-in-out;
+      .animate-gradient {
+        background-size: 200% 200%;
+        animation: gradient-bg 8s ease infinite;
+      }
+      .shimmer {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+      }
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
       }
     </style>
     <script type="importmap">
@@ -79,12 +102,13 @@
         "react-dom/": "https://esm.sh/react-dom@18.2.0/",
         "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
         "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
-        "react/jsx-dev-runtime": "https://esm.sh/react@18.2.0/jsx-dev-runtime"
+        "react/jsx-dev-runtime": "https://esm.sh/react@18.2.0/jsx-dev-runtime",
+        "@google/genai": "https://esm.sh/@google/genai@^1.38.0"
       }
     }
     </script>
   </head>
-  <body class="bg-[#0f1115] text-[#f2f5f9]">
+  <body class="bg-[#05070a]">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>
