@@ -7,7 +7,7 @@ import FilterTabs from './components/FilterTabs';
 import ItemCard from './components/ItemCard';
 import SelectionBar from './components/SelectionBar';
 import ComparisonModal from './components/ComparisonModal';
-import LiveAssistant from './components/LiveAssistant';
+
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(() => {
