@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ItemData, Currency, TranslationStrings } from '../types';
-import { getItemImageSrc, DEFAULT_IMAGE } from '../constants';
+import { getItemImageSrc, DEFAULT_IMAGE, slugify } from '../constants';
 
 interface ItemCardProps {
   item: ItemData;
@@ -16,6 +15,12 @@ interface ItemCardProps {
 const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, isSelected, onToggleSelect }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [imgSrc, setImgSrc] = useState(getItemImageSrc(item.name));
+  const [errorCount, setErrorCount] = useState(0);
+
+  useEffect(() => {
+    setImgSrc(getItemImageSrc(item.name));
+    setErrorCount(0);
+  }, [item.name]);
 
   const formatPrice = (p: number) => {
     const val = (p * currency.rate).toFixed(currency.prec);
@@ -25,14 +30,36 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
   const sortedPrices = [...item.prices].sort((a, b) => a.price - b.price);
 
   const handleImgError = () => {
-    // If it was .png, try .jpg
-    if (imgSrc.endsWith('.png')) {
-      setImgSrc(imgSrc.replace('.png', '.jpg'));
-    } 
-    // If it was .jpg or something else (that isn't default), try default.png
-    else if (imgSrc !== DEFAULT_IMAGE) {
-      setImgSrc(DEFAULT_IMAGE);
+    const name = item.name;
+    const slugWithParens = slugify(name, true);
+    const slugWithoutParens = slugify(name, false);
+
+    switch(errorCount) {
+      case 0:
+        // Try JPG instead of PNG (literal name)
+        setImgSrc(`images/${name}.jpg`);
+        break;
+      case 1:
+        // Try Slug with parens PNG
+        setImgSrc(`images/${slugWithParens}.png`);
+        break;
+      case 2:
+        // Try Slug without parens PNG
+        setImgSrc(`images/${slugWithoutParens}.png`);
+        break;
+      case 3:
+        // Try simple lowercase with dashes
+        setImgSrc(`images/${name.toLowerCase().replace(/\s+/g, '-')}.png`);
+        break;
+      case 4:
+        // Try literal name lowercase
+        setImgSrc(`images/${name.toLowerCase()}.png`);
+        break;
+      default:
+        setImgSrc(DEFAULT_IMAGE);
+        return;
     }
+    setErrorCount(prev => prev + 1);
   };
 
   return (
@@ -43,7 +70,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
       <div 
         className={`relative w-full h-full transition-transform duration-700 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
       >
-        {/* Front Side: Image and Name */}
+        {/* Front Side */}
         <div 
           className={`absolute inset-0 backface-hidden rounded-2xl border-2 p-6 flex flex-col items-center justify-between shadow-lg overflow-hidden ${
             theme === 'dark' ? 'bg-[#1c2230] border-[#273044]' : 'bg-white border-gray-200'
@@ -76,7 +103,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, currency, theme, isRtl, t, is
           </div>
         </div>
 
-        {/* Back Side: Detailed Prices */}
+        {/* Back Side */}
         <div 
           className={`absolute inset-0 backface-hidden rounded-2xl border-2 p-6 shadow-xl flex flex-col rotate-y-180 ${
             theme === 'dark' ? 'bg-[#161c26] border-cyan-500/50' : 'bg-blue-50 border-blue-500/50'

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Category, Currency, Language, ItemData } from './types';
 import { CURRENCIES, I18N, parseAllRows, INITIAL_ITEMS } from './constants';
@@ -9,43 +8,67 @@ import SelectionBar from './components/SelectionBar';
 import ComparisonModal from './components/ComparisonModal';
 
 const App: React.FC = () => {
-  const [lang, setLang] = useState<Language>(() => (localStorage.getItem('lang') as Language) || 'en');
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem('theme') as 'dark' | 'light') || 'dark');
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem('lang');
+    return (saved === 'en' || saved === 'ar') ? saved : 'en';
+  });
+  
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved === 'dark' || saved === 'light') ? saved : 'dark';
+  });
+
   const [currency, setCurrency] = useState<Currency>(() => {
     const saved = localStorage.getItem('currency');
     return saved && CURRENCIES[saved] ? CURRENCIES[saved] : CURRENCIES.USD;
   });
+
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<Category>(Category.ALL);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [items, setItems] = useState<ItemData[]>(INITIAL_ITEMS);
-  const lastItemsLength = useRef<number>(INITIAL_ITEMS.length);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Initialize from global window data if already loaded
+  const [items, setItems] = useState<ItemData[]>(() => {
+    const win = window as any;
+    if (win.ALL_ROWS && win.ALL_ROWS.length > 0) {
+      return parseAllRows(win.ALL_ROWS);
+    }
+    return INITIAL_ITEMS;
+  });
+  
+  const lastRowsCount = useRef<number>((window as any).ALL_ROWS?.length || 0);
 
-  // Still poll in case users have custom row scripts loading dynamically
   useEffect(() => {
-    const pollForData = () => {
-      const rawData = (window as any).ALL_ROWS;
+    const syncData = () => {
+      const win = window as any;
+      const rawData = win.ALL_ROWS;
+      
       if (Array.isArray(rawData) && rawData.length > 0) {
-        // Only update if we find more data than we started with
-        const totalRawLength = rawData.length;
-        if (totalRawLength > lastItemsLength.current) {
-          const parsed = parseAllRows(rawData);
-          setItems(parsed);
-          lastItemsLength.current = totalRawLength;
+        setIsLoading(false);
+        if (rawData.length !== lastRowsCount.current) {
+          console.log(`Syncing ${rawData.length} items...`);
+          setItems(parseAllRows(rawData));
+          lastRowsCount.current = rawData.length;
         }
       }
     };
 
-    pollForData(); 
-    const fastInterval = setInterval(pollForData, 500);
-    const timeout = setTimeout(() => {
-      clearInterval(fastInterval);
-      const slowInterval = setInterval(pollForData, 3000);
-      return () => clearInterval(slowInterval);
-    }, 10000);
+    // Immediate check
+    syncData();
+
+    // Event listener for real-time updates from scripts
+    window.addEventListener('rows_updated', syncData);
+
+    // Frequent polling for the first few seconds to catch delayed script execution
+    const fastInterval = setInterval(syncData, 200);
+    
+    // Failsafe: stop loading spinner after 5 seconds
+    const timeout = setTimeout(() => setIsLoading(false), 5000);
 
     return () => {
+      window.removeEventListener('rows_updated', syncData);
       clearInterval(fastInterval);
       clearTimeout(timeout);
     };
@@ -62,11 +85,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (theme === 'light') {
-      document.body.classList.add('bg-gray-50', 'text-gray-900');
-      document.body.classList.remove('bg-[#0f1115]', 'text-[#f2f5f9]');
+      document.body.className = 'bg-gray-50 text-gray-900';
     } else {
-      document.body.classList.remove('bg-gray-50', 'text-gray-900');
-      document.body.classList.add('bg-[#0f1115]', 'text-[#f2f5f9]');
+      document.body.className = 'bg-[#0f1115] text-[#f2f5f9]';
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
@@ -74,9 +95,8 @@ const App: React.FC = () => {
   const filteredItems = useMemo(() => {
     const query = search.toLowerCase().trim();
     return items.filter(item => {
-      const matchesSearch = query === '' || 
-                            item.name.toLowerCase().includes(query) || 
-                            item.category.toLowerCase().includes(query);
+      const name = String(item.name || '').toLowerCase();
+      const matchesSearch = query === '' || name.includes(query);
       const matchesCategory = activeCategory === Category.ALL || item.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
@@ -148,7 +168,12 @@ const App: React.FC = () => {
           />
         </div>
 
-        {filteredItems.length > 0 ? (
+        {isLoading && items.length === 0 ? (
+          <div className="mt-20 flex flex-col items-center gap-4 opacity-50 animate-pulse-slow">
+            <div className="text-6xl">📥</div>
+            <div className="text-xl font-bold">Synchronizing Data...</div>
+          </div>
+        ) : filteredItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
             {filteredItems.map(item => (
               <ItemCard
@@ -167,12 +192,6 @@ const App: React.FC = () => {
           <div className="mt-20 text-center flex flex-col items-center justify-center gap-4 opacity-50">
             <div className="text-6xl">🔍</div>
             <div className="text-xl font-bold">{t.ui.noResults}</div>
-            {items.length === 0 && (
-              <div className="text-sm animate-pulse">Initializing item data...</div>
-            )}
-            {items.length > 0 && search !== '' && (
-              <div className="text-sm">No items matching your search criteria</div>
-            )}
           </div>
         )}
       </main>
