@@ -1,3 +1,4 @@
+
 import { Category, Currency, TranslationStrings, ItemData } from './types';
 
 export const CURRENCIES: Record<string, Currency> = {
@@ -72,6 +73,17 @@ export const I18N: Record<'en' | 'ar', TranslationStrings> = {
   }
 };
 
+export async function fetchLiveRates(): Promise<Record<string, number>> {
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    return data.rates;
+  } catch (e) {
+    console.error("Failed to fetch live rates", e);
+    return {};
+  }
+}
+
 export function slugify(name: any, keepParens = false): string {
   if (name === null || name === undefined) return 'default';
   let s = String(name).toLowerCase();
@@ -85,12 +97,9 @@ export function slugify(name: any, keepParens = false): string {
     .replace(/^-|-$/g, '');
 }
 
-/**
- * Directly uses the item name for the image path as requested.
- * Relative path 'images/' is more compatible with diverse hosting.
- */
 export function getItemImageSrc(itemName: string): string {
   if (!itemName) return 'images/default.png';
+  // Use literal item name as requested
   return `images/${itemName}.png`;
 }
 
@@ -99,54 +108,35 @@ export const DEFAULT_IMAGE = 'images/default.png';
 export function getItemCategory(itemName: any): Category {
   if (!itemName) return Category.ALL;
   const k = String(itemName).toLowerCase();
-  
   if (k.includes("speed-up")) return Category.SPEED;
   if (k.includes("iron") || k.includes("food") || k.includes("coin") || k.includes("resource") || k.includes("battle data")) return Category.RES;
   if (k.includes("hero") || k.includes("shard") || k.includes("medal") || k.includes("skill") || k.includes("exp") || k.includes("recruit") || k.includes("chip") || k.includes("weapon")) return Category.HERO;
   if (k.includes("drone") || k.includes("gear") || k.includes("blueprint") || k.includes("ore") || k.includes("ceramic") || k.includes("upgrade") || k.includes("valor") || k.includes("guidebook") || k.includes("certificate") || k.includes("trooper")) return Category.GEAR;
   if (k.includes("decor") || k.includes("tower") || k.includes("badge") || k.includes("fungus") || k.includes("propeller")) return Category.DECOR;
-  
   return Category.ALL;
 }
 
 export function parseAllRows(rows: any[]): ItemData[] {
   if (!Array.isArray(rows)) return [];
-  
   const grouped: Record<string, ItemData> = {};
-  
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     if (!Array.isArray(row) || row.length < 3) continue;
-    
-    const nameRaw = row[0];
-    const marketRaw = row[1];
-    const priceRaw = row[2];
-
-    const name = (nameRaw === null || nameRaw === undefined) ? "" : String(nameRaw).trim();
-    if (!name || name === 'undefined' || name === 'null' || name === '') continue;
-
-    const market = (marketRaw === null || marketRaw === undefined) ? "" : String(marketRaw).trim();
-    
-    let price = 0;
-    if (typeof priceRaw === 'number') {
-      price = priceRaw;
-    } else {
-      const parsed = parseFloat(String(priceRaw));
-      price = isNaN(parsed) ? 0 : parsed;
-    }
-
+    const name = String(row[0] || '').trim();
+    if (!name || name === 'undefined') continue;
+    const market = String(row[1] || '').trim();
+    const price = typeof row[2] === 'number' ? row[2] : parseFloat(String(row[2]));
+    if (isNaN(price)) continue;
     if (!grouped[name]) {
       grouped[name] = {
-        id: slugify(name, true), 
+        id: slugify(name, true),
         name: name,
         category: getItemCategory(name),
         prices: []
       };
     }
-    
     grouped[name].prices.push({ market, price });
   }
-
   return Object.values(grouped);
 }
 
