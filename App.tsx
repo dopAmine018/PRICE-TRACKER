@@ -236,7 +236,6 @@ const App: React.FC = () => {
         }`}
       >
         <div className="opacity-40 text-xs font-black uppercase tracking-tighter">
-          Powered by Real-Time Currency Exchange
         </div>
         <div className="opacity-60 text-sm mt-2">
           Made by <strong>ASN1/1628</strong>
